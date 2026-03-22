@@ -1,0 +1,56 @@
+# ==========================
+# Spring Boot / Java
+# ==========================
+
+# Maven build folder
+/target/
+
+# Gradle build folder (if used)
+/build/
+
+# Eclipse IDE files
+/.classpath
+/.project
+/.settings/
+/bin/
+*.tmp
+*.bak
+*.swp
+
+# IntelliJ IDEA files (if used)
+/.idea/
+/*.iml
+
+# Logs
+*.log
+/logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Environment / Secrets
+# ==========================
+
+# Spring Boot config with secrets
+application.properties
+application-dev.properties
+application-prod.properties
+
+# Environment variable files
+.env
+
+# ==========================
+# Others
+# ==========================
+# Generated jars, wars
+*.jar
+*.war
+*.ear
+
+# Node modules (if frontend in same repo)
+node_modules/
+
+# Optional: Eclipse metadata cache
+.metadata/
