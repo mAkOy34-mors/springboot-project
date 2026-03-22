@@ -63,11 +63,12 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
-                .requestMatchers(
-                    "/api/v1/users/register",
-                    "/api/v1/users/login",
-                    "/api/files/download/**"
-                ).permitAll()
+            		.requestMatchers(
+            			    "/api/v1/users/register",
+            			    "/api/v1/users/login",
+            			    "/api/v1/users/setup",
+            			    "/api/files/download/**"
+            			).permitAll()
                 // Worker request tracking (public)
                 .requestMatchers("/api/v1/requests/track/**").permitAll()
                 // Everything else requires authentication

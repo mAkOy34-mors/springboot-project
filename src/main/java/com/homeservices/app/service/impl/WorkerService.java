@@ -1,8 +1,10 @@
 package com.homeservices.app.service.impl;
 
 import com.homeservices.app.dto.request.WorkerDetailsRequest;
+import com.homeservices.app.dto.response.SearchWorkerResponse;
 import com.homeservices.app.dto.response.WorkerDetailsResponse;
 import com.homeservices.app.dto.response.WorkerDocumentResponse;
+import com.homeservices.app.entity.UserProfile;
 import com.homeservices.app.entity.UserTable;
 import com.homeservices.app.entity.WorkerDetails;
 import com.homeservices.app.entity.WorkerDocument;
@@ -144,5 +146,78 @@ public class WorkerService {
         } catch (Exception e) {
             return new ArrayList<>();
         }
+    }
+    
+    public List<WorkerDetailsResponse> searchByName(String name, String lastName) {
+        return workerDetailsRepository.findAll().stream()
+                .filter(w -> w.getWorker() != null
+                        && w.getWorker().getUserProfile() != null
+                        && w.getWorker().getUserProfile().getName() != null
+                        && w.getWorker().getUserProfile().getName()
+                                .equalsIgnoreCase(name)
+                        && w.getWorker().getUserProfile().getLastName() != null
+                        && w.getWorker().getUserProfile().getLastName()
+                                .equalsIgnoreCase(lastName))
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<WorkerDetailsResponse> searchWorkers(String workType) {
+        if (workType != null && !workType.isBlank()) {
+            return workerDetailsRepository.findByWorkType(workType).stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        }
+        return getAllWorkers();
+    }
+    public List<SearchWorkerResponse> searchWorkersForClient(String workType) {
+        List<WorkerDetails> workers = (workType != null && !workType.isBlank())
+                ? workerDetailsRepository.findByWorkType(workType)
+                : workerDetailsRepository.findAll();
+
+        return workers.stream()
+                .map(this::toSearchResponse)
+                .collect(Collectors.toList());
+    }
+
+    private SearchWorkerResponse toSearchResponse(WorkerDetails d) {
+        String name = null;
+        String lastName = null;
+        String address = null;
+        String profilePic = null;
+
+        if (d.getWorker() != null && d.getWorker().getUserProfile() != null) {
+            UserProfile p = d.getWorker().getUserProfile();
+            name = p.getName();
+            lastName = p.getLastName();
+            address = p.getAddress();
+            profilePic = p.getProfilePic();
+        }
+
+        // Get latest comment from ratings
+        String latestComment = null;
+        if (d.getRatingsReceived() != null && !d.getRatingsReceived().isEmpty()) {
+            latestComment = d.getRatingsReceived()
+                    .get(d.getRatingsReceived().size() - 1)
+                    .getComments();
+        }
+
+        int totalRatings = d.getRatingsReceived() != null
+                ? d.getRatingsReceived().size() : 0;
+
+        return SearchWorkerResponse.builder()
+                .id(d.getWorker() != null ? d.getWorker().getId() : null)
+                .name(name)
+                .lastName(lastName)
+                .address(address)
+                .workType(d.getWorkType())
+                .workExperience(d.getWorkExperience())
+                .profilePic(profilePic)
+                .isVerified(d.getIsVerified())
+                .documents(d.getDocuments())   // ← raw JSON string
+                .averageRating(d.getRatings())
+                .totalRatings(totalRatings)
+                .latestComment(latestComment)
+                .build();
     }
 }

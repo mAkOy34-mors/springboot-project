@@ -38,7 +38,9 @@ public class FileStorageService {
     }
 
     public Path loadFile(String fileName) {
-        return Paths.get(uploadDir).resolve(fileName).normalize();
+        Path path = Paths.get(uploadDir).toAbsolutePath().normalize().resolve(fileName).normalize();
+        System.out.println("=== LOOKING FOR FILE AT: " + path.toString()); // ← add this
+        return path;
     }
 
     public void deleteFile(String fileName) {

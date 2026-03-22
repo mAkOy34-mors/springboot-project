@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 @RestController
@@ -21,37 +22,36 @@ public class FileController {
 
     private final FileStorageService fileStorageService;
 
-    /**
-     * GET /api/files/download/{filename}
-     * Matches the URL pattern already used in the database
-     */
     @GetMapping("/download/{filename:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String filename) {
         try {
             Path filePath = fileStorageService.loadFile(filename);
-            Resource resource = new UrlResource(filePath.toUri());
+            
+            System.out.println("=== FILE EXISTS: " + Files.exists(filePath));
+            System.out.println("=== FILE READABLE: " + Files.isReadable(filePath));
+            System.out.println("=== ABSOLUTE PATH: " + filePath.toAbsolutePath());
 
-            if (!resource.exists() || !resource.isReadable()) {
+            if (!Files.exists(filePath)) {
+                System.out.println("=== FILE NOT FOUND AT: " + filePath);
                 return ResponseEntity.notFound().build();
             }
 
+            Resource resource = new UrlResource(filePath.toUri());
             String contentType = determineContentType(filename);
 
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "inline; filename=\"" + resource.getFilename() + "\"")
+                    .header(HttpHeaders.CACHE_CONTROL, "max-age=86400")
+                    .header(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*")
                     .body(resource);
 
-        } catch (MalformedURLException e) {
-            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            System.out.println("=== FILE ERROR: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
-
-    /**
-     * POST /api/files/upload
-     * General-purpose file upload — returns the download URL
-     */
     @PostMapping("/upload")
     public ResponseEntity<ApiResponse<String>> uploadFile(
             @RequestParam("file") MultipartFile file) {
@@ -66,7 +66,9 @@ public class FileController {
         if (lower.endsWith(".png"))  return "image/png";
         if (lower.endsWith(".gif"))  return "image/gif";
         if (lower.endsWith(".webp")) return "image/webp";
+        if (lower.endsWith(".avif")) return "image/avif";
+        if (lower.endsWith(".bmp"))  return "image/bmp";
         if (lower.endsWith(".pdf"))  return "application/pdf";
-        return "application/octet-stream";
+        return "application/octet-stream"; // ← fallback for all other files
     }
 }
