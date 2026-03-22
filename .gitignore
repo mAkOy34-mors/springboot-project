@@ -2,6 +2,9 @@
 # Spring Boot / Java
 # ==========================
 
+# Ignore uploaded files
+uploads/
+
 # Maven build folder
 /target/
 
